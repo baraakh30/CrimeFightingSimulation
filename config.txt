@@ -11,7 +11,7 @@ member_knowledge_rank_factor = 0.1
 member_knowledge_lucky_chance = 0.2
 base_preparation_increment = 0.05
 rank_preparation_bonus = 0.1
-min_preparation_required_base = 0.7   
+min_preparation_required_base = 0.8   
 min_preparation_difficulty_factor = 0.3
 promotion_base_chance = 0.2
 promotion_rank_factor = 0.2
@@ -23,10 +23,10 @@ preparation_knowledge_factor = 0.05
 preparation_rank_factor = 0.02
 
 # Agent configuration
-agent_infiltration_rate = 0.2
-agent_suspicion_threshold = 0.8
-police_confirmation_threshold = 0.8
-agent_knowledge_gain = 0.03
+agent_infiltration_rate = 0.3
+agent_suspicion_threshold = 0.7
+police_confirmation_threshold = 0.7
+agent_knowledge_gain = 0.1
 agent_report_knowledge_reset = 0.2
 agent_base_suspicion = 0.1`
 knowledge_anomaly_suspicion = 0.15

@@ -116,9 +116,9 @@ int send_police_order(int msg_queue_id, int gang_id, int duration) {
     IpcMessage message;
     
     /* Fill out the message structure */
-    message.mtype = MSG_TYPE_POLICE_ORDER;
-    message.data.gang_id = gang_id;
-    message.data.arrest_duration = duration;
+    message.mtype = MSG_TYPE_POLICE_ORDER(gang_id);  /* Use gang-specific message type */
+    message.data.police_order.gang_id = gang_id;
+    message.data.police_order.arrest_duration = duration;
     
     /* Send the message */
     return send_message(msg_queue_id, &message);

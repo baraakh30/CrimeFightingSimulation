@@ -29,9 +29,12 @@
 
 /* Message types for inter-process communication */
 #define MSG_TYPE_GANG_REPORT 1
-#define MSG_TYPE_POLICE_ORDER 2
+#define MSG_TYPE_POLICE_ORDER_BASE 100  /* Base for gang-specific police orders */
 #define MSG_TYPE_AGENT_REPORT 3
 #define MSG_TYPE_SIMULATION_STATUS 4
+
+/* Macro to get gang-specific police order message type */
+#define MSG_TYPE_POLICE_ORDER(gang_id) (MSG_TYPE_POLICE_ORDER_BASE + (gang_id))
 
 typedef struct SharedState SharedState;
 
@@ -181,6 +184,13 @@ typedef struct
     time_t estimated_execution_time;
 } AgentReport;
 
+/* Structure for police orders */
+typedef struct
+{
+    int gang_id;
+    int arrest_duration;
+} PoliceOrder;
+
 /* Message structure for inter-process communication */
 typedef struct
 {
@@ -188,10 +198,9 @@ typedef struct
     union
     {
         AgentReport agent_report;
-        int gang_id;
+        PoliceOrder police_order;
         CrimeTarget target;
         SimulationStatus status;
-        int arrest_duration;
     } data;
 } IpcMessage;
 

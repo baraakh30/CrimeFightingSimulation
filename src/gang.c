@@ -102,12 +102,10 @@ void gang_process_main(int gang_id, SimConfig *config, int msg_queue_id, int sha
     create_new_mission(gang, config);
     
     while (running && !gang_shutdown_requested) {
-        // Check for messages from police
-        if (receive_message(msg_queue_id, &message, MSG_TYPE_POLICE_ORDER, true) == 0) {
-            if (message.data.gang_id == gang_id) {
-                log_message("Gang %d: Received arrest order for %d days", gang_id, message.data.arrest_duration);
-                process_arrest(gang, message.data.arrest_duration);
-            }
+        // Check for messages from police (using gang-specific message type)
+        if (receive_message(msg_queue_id, &message, MSG_TYPE_POLICE_ORDER(gang_id), true) == 0) {
+            log_message("Gang %d: Received arrest order for %d days", gang_id, message.data.police_order.arrest_duration);
+            process_arrest(gang, message.data.police_order.arrest_duration);
         }
         
         // Check simulation status
