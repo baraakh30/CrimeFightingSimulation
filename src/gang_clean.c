@@ -466,7 +466,7 @@ void* gang_member_thread(void *arg) {
             }
             
             if (assigned_mission && assigned_mission->in_progress && !assigned_mission->disrupted) {
-                //  preparation level
+                // Improve preparation level
                 float prep_increment = config->base_preparation_increment + 
                     (config->rank_preparation_bonus * member->rank / (float)config->num_ranks);
 

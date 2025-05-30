@@ -422,6 +422,29 @@ void investigate_mission_for_agents(Gang *gang, Mission *mission, SimConfig *con
     }
 }
 
+void select_new_target(Gang *gang, SimConfig *config) {
+    // Pick a random target
+    gang->current_target = rand() % TARGET_COUNT;
+    
+    // Set preparation time within configured range
+    gang->target_preparation_time = rand_range(config->preparation_time_min, config->preparation_time_max);
+    
+    // Set required preparation level (scaled based on target difficulty)
+    float target_difficulty = config->target_difficulty_base + 
+    ((float)gang->current_target / TARGET_COUNT) * config->target_difficulty_scaling;
+    gang->required_preparation_level = config->min_preparation_required_base + 
+    rand_float() * config->min_preparation_difficulty_factor * target_difficulty;
+    
+    // Assign members to this mission
+    assign_mission_members(gang, config);
+    
+    // Reset preparation levels for all members
+    for (int i = 0; i < gang->member_count; i++) {
+        gang->members[i].preparation_level = 0.0f;
+        gang->members[i].knowledge_level = 0.0f;
+    }
+}
+
 void* gang_member_thread(void *arg) {
     GangMemberArgs *args = (GangMemberArgs *)arg;
     Gang *gang = args->gang;
@@ -466,7 +489,7 @@ void* gang_member_thread(void *arg) {
             }
             
             if (assigned_mission && assigned_mission->in_progress && !assigned_mission->disrupted) {
-                //  preparation level
+                // Improve preparation level
                 float prep_increment = config->base_preparation_increment + 
                     (config->rank_preparation_bonus * member->rank / (float)config->num_ranks);
 
@@ -524,6 +547,96 @@ void* gang_member_thread(void *arg) {
     return NULL;
 }
 
+void spread_information(Gang *gang, SimConfig *config, bool is_false) {
+    CrimeTarget real_target = gang->current_target;
+    
+    // If spreading false information, select a different target
+    if (is_false) {
+        CrimeTarget false_target;
+        do {
+            false_target = rand() % TARGET_COUNT;
+        } while (false_target == real_target);
+        
+        gang->current_target = false_target;
+    }
+    
+    // Spread information based on rank
+    for (int i = 0; i < gang->member_count; i++) {
+        if (gang->members[i].status != MEMBER_STATUS_ACTIVE) {
+            continue;
+        }
+        
+        // Higher ranks get more accurate information
+        float accuracy = (float)gang->members[i].rank / config->num_ranks;
+        
+        // If not spreading false info, or if member rank is high
+        if (!is_false || rand_float() > accuracy) {
+gang->members[i].knowledge_level += config->info_spread_base_value + 
+                                   config->info_spread_rank_factor * accuracy;
+            
+            // Cap knowledge level
+            if (gang->members[i].knowledge_level > 1.0f) {
+                gang->members[i].knowledge_level = 1.0f;
+            }
+        }
+    }
+    
+    // Reset target if we were spreading false info
+    if (is_false) {
+        gang->current_target = real_target;
+    }
+    
+    // Simulate delay in information spreading
+    usleep(config->info_spread_delay * 1000);
+}
+
+bool execute_plan(Gang *gang, SimConfig *config, int msg_queue_id) {
+    log_message("Gang %d: Executing plan for target: %s", gang->id, get_target_name(gang->current_target));
+    
+    // Calculate success probability based on preparation of assigned members only
+    float avg_preparation = 0.0f;
+    int assigned_members = 0;
+    
+    for (int i = 0; i < gang->member_count; i++) {
+        if (gang->members[i].status == MEMBER_STATUS_ACTIVE && gang->members[i].mission_assigned) {
+            avg_preparation += gang->members[i].preparation_level;
+            assigned_members++;
+        }
+    }
+    
+    if (assigned_members > 0) {
+        avg_preparation /= assigned_members;
+    } else {
+        return false; // No assigned members, automatic failure
+    }
+    
+    // Final success probability
+    float success_prob = config->mission_success_rate_base * avg_preparation;
+    
+    // Check for mission success
+    bool success = (rand_float() < success_prob);
+    
+    // Handle casualties only for assigned members
+    for (int i = 0; i < gang->member_count; i++) {
+        if (gang->members[i].status == MEMBER_STATUS_ACTIVE && gang->members[i].mission_assigned) {
+            // Check if member dies during mission
+            if (rand_float() < config->mission_kill_probability) {
+                gang->members[i].status = MEMBER_STATUS_DEAD;
+                log_message("Gang %d, Member %d: Died during mission", gang->id, i);
+                
+                // Handle agent death
+                if (gang->members[i].is_agent) {
+                    sem_wait(gang->member_semaphore);
+                    update_agent_status(gang->shared_state, gang->members[i].agent_id, AGENT_STATUS_DEAD);
+                    sem_post(gang->member_semaphore);
+                }
+            }
+        }
+    }
+    
+    return success;
+}
+
 void process_arrest(Gang *gang, int duration) {
     time_t release_time = time(NULL) + duration;
     
@@ -574,8 +687,8 @@ void promote_members(Gang *gang, SimConfig *config) {
             gang->members[i].rank < config->num_ranks - 1) {
             
             // Chance of promotion increases with lower rank
-            float promotion_chance = config->promotion_base_chance * 
-                (1.0f - (gang->members[i].rank / (float)config->num_ranks));            
+float promotion_chance = config->promotion_base_chance * 
+    (1.0f - (gang->members[i].rank / (float)config->num_ranks));            
             if (rand_float() < promotion_chance) {
                 gang->members[i].rank++;
                 log_message("Gang %d, Member %d: Promoted to rank %d", 
@@ -619,7 +732,7 @@ void member_interaction(Gang *gang, int member_index, int target_index, SimConfi
     if (member->rank >= target->rank) {
         // Knowledge flows from higher rank to lower rank
         float knowledge_transfer = config->member_knowledge_transfer_rate + 
-            config->member_knowledge_rank_factor * (member->knowledge_level - target->knowledge_level);
+    config->member_knowledge_rank_factor * (member->knowledge_level - target->knowledge_level);
         if (knowledge_transfer > 0) {
             target->knowledge_level += knowledge_transfer;
             if (target->knowledge_level > 1.0f) {
@@ -629,8 +742,8 @@ void member_interaction(Gang *gang, int member_index, int target_index, SimConfi
     } else {
         // Lower ranks can sometimes get information from higher ranks if lucky
         if (rand_float() < config->member_knowledge_lucky_chance) {
-            float knowledge_transfer = config->member_knowledge_transfer_rate * 
-                (target->knowledge_level - member->knowledge_level);
+float knowledge_transfer = config->member_knowledge_transfer_rate * 
+    (target->knowledge_level - member->knowledge_level);
             if (knowledge_transfer > 0) {
                 member->knowledge_level += knowledge_transfer;
                 if (member->knowledge_level > 1.0f) {
@@ -657,6 +770,9 @@ void update_preparation_levels(Gang *gang, SimConfig *config) {
                                 config->preparation_rank_factor * gang->members[i].rank / (float)config->num_ranks;
             prep_increment *= (config->preparation_knowledge_factor + 
                             config->preparation_knowledge_factor * gang->members[i].knowledge_level);
+
+
+
 
             gang->members[i].preparation_level += prep_increment;
             if (gang->members[i].preparation_level > 1.0f) {

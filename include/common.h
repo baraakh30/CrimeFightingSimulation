@@ -25,6 +25,7 @@
 #define MAX_MEMBERS 50
 #define MAX_RANKS 10
 #define MAX_AGENTS 50
+#define MAX_CONCURRENT_MISSIONS 5
 
 /* Message types for inter-process communication */
 #define MSG_TYPE_GANG_REPORT 1
@@ -74,6 +75,20 @@ typedef enum
     SIM_STATUS_SHUTDOWN
 } SimulationStatus;
 
+/* Structure for individual missions */
+typedef struct
+{
+    int mission_id;
+    CrimeTarget target;
+    int preparation_time;
+    float required_preparation_level;
+    bool in_progress;
+    bool disrupted;
+    int assigned_members[MAX_MEMBERS]; /* Array of member indices assigned to this mission */
+    int assigned_count; /* Number of members assigned */
+    time_t start_time;
+} Mission;
+
 /* Structure to represent configuration parameters loaded from file */
 typedef struct
 {
@@ -81,6 +96,7 @@ typedef struct
     int min_members_per_gang;
     int max_members_per_gang;
     int num_ranks;
+    int mission_members_count;
     float agent_infiltration_rate;
     int preparation_time_min;
     int preparation_time_max;
@@ -132,6 +148,7 @@ typedef struct
     bool is_agent;
     int agent_id; /* -1 if not an agent */
     MemberStatus status;
+    int assigned_mission_id; /* ID of mission this member is assigned to, -1 if not assigned */
     float preparation_level;
     float knowledge_level; /* How much correct info they have about current plan */
     time_t release_time;   /* When arrested, this indicates release time */
@@ -143,11 +160,9 @@ typedef struct
 {
     int id;
     int member_count;
-    CrimeTarget current_target;
-    int target_preparation_time;
-    float required_preparation_level;
-    bool plan_in_progress;
-    bool plan_disrupted;
+    Mission missions[MAX_CONCURRENT_MISSIONS]; /* Array of concurrent missions */
+    int active_mission_count; /* Number of currently active missions */
+    int next_mission_id; /* Counter for assigning unique mission IDs */
     int successful_missions;
     int failed_missions;
     pid_t process_id;

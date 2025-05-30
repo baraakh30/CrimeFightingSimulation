@@ -210,25 +210,41 @@ void render_gang_box(float x, float y, Gang *gang) {
     snprintf(buffer, MAX_TEXT_LENGTH, "Gang #%d", gang->id);
     render_string(x + 10, y + 20, FONT_TITLE, buffer);
     
-    // Draw current target info
+    // Draw active missions info
     glColor3f(COLOR_TEXT);
-    snprintf(buffer, MAX_TEXT_LENGTH, "Target: %s", get_target_name(gang->current_target));
+    snprintf(buffer, MAX_TEXT_LENGTH, "Active Missions: %d/%d", gang->active_mission_count, MAX_CONCURRENT_MISSIONS);
     render_string(x + 10, y + 40, FONT_NORMAL, buffer);
     
-    // Draw progress info
-    snprintf(buffer, MAX_TEXT_LENGTH, "Preparation: %d%% (%d secs)",
-             (int)(gang->required_preparation_level * 100),
-             gang->target_preparation_time);
-    render_string(x + 10, y + 55, FONT_NORMAL, buffer);
+    // Show details of first active mission (if any)
+    Mission *first_mission = NULL;
+    for (int i = 0; i < MAX_CONCURRENT_MISSIONS; i++) {
+        if (gang->missions[i].mission_id != -1 && gang->missions[i].in_progress) {
+            first_mission = &gang->missions[i];
+            break;
+        }
+    }
+    
+    if (first_mission) {
+        snprintf(buffer, MAX_TEXT_LENGTH, "Next Target: %s", get_target_name(first_mission->target));
+        render_string(x + 10, y + 55, FONT_NORMAL, buffer);
+        
+        snprintf(buffer, MAX_TEXT_LENGTH, "Prep Required: %d%% (%d members)", 
+                 (int)(first_mission->required_preparation_level * 100),
+                 first_mission->assigned_count);
+        render_string(x + 10, y + 70, FONT_NORMAL, buffer);
+    } else {
+        snprintf(buffer, MAX_TEXT_LENGTH, "No active missions");
+        render_string(x + 10, y + 55, FONT_NORMAL, buffer);
+    }
     
     // Draw member count
     snprintf(buffer, MAX_TEXT_LENGTH, "Members: %d", gang->member_count);
-    render_string(x + 10, y + 70, FONT_NORMAL, buffer);
+    render_string(x + 10, y + 85, FONT_NORMAL, buffer);
     
     // Draw mission stats
     snprintf(buffer, MAX_TEXT_LENGTH, "Success: %d / Fails: %d", 
              gang->successful_missions, gang->failed_missions);
-    render_string(x + 10, y + 85, FONT_NORMAL, buffer);
+    render_string(x + 10, y + 100, FONT_NORMAL, buffer);
     
     // Draw member icons
     float member_x = x + 200;

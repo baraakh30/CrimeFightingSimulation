@@ -10,6 +10,7 @@ void set_default_config(SimConfig *config) {
     config->min_members_per_gang = 5;
     config->max_members_per_gang = 10;
     config->num_ranks = 5;
+    config->mission_members_count = 4;
     config->agent_infiltration_rate = 0.3;
     config->preparation_time_min = 10;
     config->preparation_time_max = 30;
@@ -131,6 +132,8 @@ int load_config(const char *filename, SimConfig *config) {
                 config->max_members_per_gang = atoi(value);
             } else if (strcmp(key, "num_ranks") == 0) {
                 config->num_ranks = atoi(value);
+            } else if (strcmp(key, "mission_members_count") == 0) {
+                config->mission_members_count = atoi(value);
             } else if (strcmp(key, "agent_infiltration_rate") == 0) {
                 config->agent_infiltration_rate = atof(value);
             } else if (strcmp(key, "preparation_time_min") == 0) {
@@ -222,6 +225,7 @@ void print_config(SimConfig *config) {
     printf("Number of gangs: %d\n", config->num_gangs);
     printf("Members per gang: %d-%d\n", config->min_members_per_gang, config->max_members_per_gang);
     printf("Number of ranks: %d\n", config->num_ranks);
+    printf("Mission members count: %d\n", config->mission_members_count);
     printf("Agent infiltration rate: %.2f\n", config->agent_infiltration_rate);
     printf("Preparation time range: %d-%d seconds\n", 
            config->preparation_time_min, config->preparation_time_max);

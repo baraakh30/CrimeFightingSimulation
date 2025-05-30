@@ -5,6 +5,7 @@ num_gangs = 5
 min_members_per_gang = 8
 max_members_per_gang = 15
 num_ranks = 5
+mission_members_count = 4
 member_knowledge_transfer_rate = 0.05
 member_knowledge_rank_factor = 0.1      
 member_knowledge_lucky_chance = 0.2
@@ -23,13 +24,13 @@ preparation_rank_factor = 0.02
 
 # Agent configuration
 agent_infiltration_rate = 0.2
-agent_suspicion_threshold = 0.7
+agent_suspicion_threshold = 0.8
 police_confirmation_threshold = 0.8
 agent_knowledge_gain = 0.03
 agent_report_knowledge_reset = 0.2
-agent_base_suspicion = 0.2
+agent_base_suspicion = 0.1`
 knowledge_anomaly_suspicion = 0.15
-min_agent_report_time = 3
+min_agent_report_time = 2
 agent_initial_knowledge_threshold = 0.1
 agent_knowledge_report_threshold = 0.7
 agent_discovery_threshold = 0.7
