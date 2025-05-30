@@ -1,4 +1,3 @@
-config2.txt
 .vscode/*
 build/*
-bakery_log.txt
+simulation.log

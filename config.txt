@@ -1,0 +1,52 @@
+# Secret Agent Simulation Configuration
+
+# Gang configuration
+num_gangs = 5
+min_members_per_gang = 8
+max_members_per_gang = 15
+num_ranks = 5
+member_knowledge_transfer_rate = 0.05
+member_knowledge_rank_factor = 0.1      
+member_knowledge_lucky_chance = 0.2
+base_preparation_increment = 0.05
+rank_preparation_bonus = 0.1
+min_preparation_required_base = 0.7   
+min_preparation_difficulty_factor = 0.3
+promotion_base_chance = 0.2
+promotion_rank_factor = 0.2
+target_difficulty_base = 0.5
+target_difficulty_scaling = 0.5
+info_spread_base_value = 0.05
+info_spread_rank_factor = 0.25
+preparation_knowledge_factor = 0.05
+preparation_rank_factor = 0.02
+
+# Agent configuration
+agent_infiltration_rate = 0.2
+agent_suspicion_threshold = 0.7
+police_confirmation_threshold = 0.8
+agent_knowledge_gain = 0.03
+agent_report_knowledge_reset = 0.2
+agent_base_suspicion = 0.2
+knowledge_anomaly_suspicion = 0.15
+min_agent_report_time = 3
+agent_initial_knowledge_threshold = 0.1
+agent_knowledge_report_threshold = 0.7
+agent_discovery_threshold = 0.7
+
+# Mission parameters
+preparation_time_min = 1
+preparation_time_max = 3
+false_info_probability = 0.3
+mission_success_rate_base = 0.6
+mission_kill_probability = 0.15
+
+# Police parameters  
+prison_time = 4
+info_spread_delay = 5
+max_agents_per_gang = 2
+
+# Win/loss conditions
+police_thwart_win_count = 15
+gang_success_win_count = 15
+agent_execution_loss_count = 4
