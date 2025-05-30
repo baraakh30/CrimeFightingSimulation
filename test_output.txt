@@ -1,3 +1,0 @@
-Usage: ./simulation [config_file]
-
-If config isnt valid, the program will use default values
